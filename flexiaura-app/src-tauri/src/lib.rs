@@ -2,6 +2,14 @@ mod commands {
     pub mod system;
 }
 
+mod models {
+    pub mod system_info;
+}
+
+mod services {
+    pub mod system_service;
+}
+
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
 
