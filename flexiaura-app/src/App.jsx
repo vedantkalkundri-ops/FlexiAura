@@ -3,8 +3,11 @@ import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getSystemInfo } from "./features/system-control/services/systemService";
 import "./App.css";
+import { getMemoryInfo } from "./features/system-control/services/memoryService";
+import { getCpuInfo } from "./features/system-control/services/cpuService";
 
 function App() {
+  //System info and Greet
   const [greetMsg, setGreetMsg] = useState("");
   const [name, setName] = useState("");
   const [systemInfo, setSystemInfo] = useState(null);
@@ -21,6 +24,34 @@ function App() {
       setSystemInfo(info);
     } catch (err) {
       setError(String(err));
+    }
+  }
+  
+  //Memory Service
+  const [memoryInfo, setMemoryInfo] = useState(null);
+  const [memoryError, setMemoryError] = useState("");
+
+  async function fetchMemoryInfo() {
+    try {
+      setMemoryError("");
+      const info = await getMemoryInfo();
+      setMemoryInfo(info);
+    } catch (error) {
+      setMemoryError(String(error));
+    }
+  }
+
+  //CPU Service
+  const [cpuInfo, setCpuInfo] = useState(null);
+  const [cpuError, setCpuError] = useState("");
+
+  async function fetchCpuInfo() {
+    try {
+      setCpuError("");
+      const info = await getCpuInfo();
+      setCpuInfo(info);
+    } catch (error) {
+      setCpuError(String(error));
     }
   }
 
@@ -69,6 +100,38 @@ function App() {
 
         <p>{greetMsg}</p>
       </section>
+
+      <section>
+        <h2>RAM Monitoring</h2>
+
+        <button onClick={fetchMemoryInfo}>
+          Check RAM Usage
+        </button>
+
+        {memoryInfo && (
+          <div>
+            <p>
+              Total RAM: {(memoryInfo.totalMemory / 1024 ** 3).toFixed(2)} GB
+            </p>
+
+            <p>
+              Used RAM: {(memoryInfo.usedMemory / 1024 ** 3).toFixed(2)} GB
+            </p>
+
+            <p>
+              Available RAM: {(memoryInfo.availableMemory / 1024 ** 3).toFixed(2)} GB
+            </p>
+
+            <p>
+              RAM Usage: {memoryInfo.usagePercentage.toFixed(2)}%
+            </p>
+          </div>
+        )}
+
+        {memoryError && <p>Error: {memoryError}</p>}
+      </section>
+
+      
     </main>
   );
 }
