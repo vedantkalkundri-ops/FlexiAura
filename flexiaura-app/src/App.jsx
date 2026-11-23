@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getSystemInfo } from "./features/system-control/services/systemService";
+import { AssistantPanel } from "./features/ai-assistant";
 import "./App.css";
 
 function App() {
@@ -28,6 +29,12 @@ function App() {
     <main className="container">
       <h1>FlexiAura</h1>
       <p>AI Desktop Assistant</p>
+
+      <section>
+        <AssistantPanel />
+      </section>
+
+      <hr />
 
       <section>
         <h2>Rust Connection Test</h2>

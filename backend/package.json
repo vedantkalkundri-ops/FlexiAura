@@ -1,0 +1,21 @@
+{
+  "name": "flexiaura-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "FlexiAura AI and voice backend (Member 2)",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test",
+    "test:gemini": "node --test tests/gemini.integration.test.js"
+  },
+  "dependencies": {
+    "@google/genai": "^3.6.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.7.5"
+  }
+}
