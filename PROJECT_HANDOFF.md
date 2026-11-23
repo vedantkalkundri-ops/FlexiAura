@@ -1,59 +1,63 @@
 # FlexiAura — Project Handoff
 
-> Updated: 2026-11-18 (Asia/Calcutta)
+> Updated: 2026-11-23 (Asia/Calcutta)
 > Source of product requirements: the user-provided PRD v2.0, reproduced in full below.
-> This progress snapshot is based on repository files and Git status at the date above. Planned requirements are not evidence of implemented features.
+> This progress snapshot is based on repository files and Git history at the date above. Planned requirements are not evidence of implemented features.
 
 ## Project at a glance
 
-FlexiAura is intended to be a lightweight desktop AI companion represented by a floating pixel-art black cat. The supplied PRD describes a Windows-first Tauri desktop app, with React UI, Rust native commands, and a planned Node.js AI/voice backend. Its long-term scope includes chat, voice, safe desktop tools, file assistance, requested screen analysis, settings, and contextual result panels.
+FlexiAura is intended to be a lightweight desktop AI companion represented by a floating pixel-art black cat. The PRD describes a Windows-first Tauri desktop app, with a React UI, Rust native commands, and a planned Node.js AI/voice backend. The longer-term scope includes chat, voice, permission-controlled desktop tools, file assistance, user-requested screen analysis, settings, and contextual panels.
 
 ## Current implementation snapshot
 
-### Confirmed in the repository
+### Implemented and visible in the current source
 
-- Desktop shell: Tauri 2, configured with a single 800×600 window (`flexiaura-app/src-tauri/tauri.conf.json`).
-- Frontend: React 19 and Vite, JavaScript modules (`flexiaura-app/package.json`).
-- Rust backend is registered with the Tauri app and exposes a `greet` command plus `get_system_info`.
-- The system information command returns OS, architecture, hostname, and a static `Running` status through a small Rust service and model. The React screen calls it via the Tauri API and displays the result or an error.
-- The current React screen is a functional integration/demo page with “Get System Information” and “Greet Test” controls; its CSS is still close to the Vite starter template.
-- A frontend system-control service wraps the `get_system_info` Tauri invocation.
+- Desktop shell: Tauri 2 with a single 800 x 600 window (`flexiaura-app/src-tauri/tauri.conf.json`).
+- Frontend: React 19 and Vite using JavaScript modules (`flexiaura-app/package.json`).
+- Rust/Tauri commands registered in `src-tauri/src/lib.rs`: `greet`, `get_system_info`, `get_memory_info`, and `get_cpu_info`.
+- System information flow: React calls a frontend service, which invokes Rust and displays OS, architecture, hostname, and app status.
+- Memory flow: Rust uses `sysinfo` to collect total, used, and available memory and calculates a usage percentage. The frontend service invokes the command, and `App.jsx` displays RAM values in GB and percent.
+- CPU flow: Rust uses `sysinfo` to read processor name, average per-core usage, logical processor count, and frequency. The Tauri command and frontend invocation service are wired into `App.jsx`, which displays these values and errors. The UI fetches CPU and RAM information on startup and refreshes them every two seconds; manual refresh buttons are also present.
+- The greet form remains a Rust/React connectivity demo.
 - Tauri default capability grants core and opener defaults.
-- Git history includes commits described as Rust/React connection and system information retrieval.
+
+### In progress / integration gaps
+
+- CPU and RAM monitoring are visible in the developer test page and auto-refresh every two seconds. Loading states and stale-request handling are not implemented.
+- `cpu_service.rs` blocks its command thread for 500 ms between CPU refreshes to obtain a usage measurement. Since the UI polls CPU and RAM every two seconds, consider whether the blocking measurement and polling interval are appropriate for responsiveness and resource use.
+- The current screen is still a developer test page rather than the intended companion product UI.
 
 ### Not implemented in the inspected source
 
-No companion cat UI/animation, floating transparent window behavior, drag-to-move behavior, chat interface, AI provider/backend, voice input/output, conversation persistence, file manager, screen capture/vision, permission/confirmation flow, settings UI, or contextual panels were found in the source files inspected. Treat these as PRD requirements/roadmap, not completed functionality.
+No pixel cat UI/animation, small floating transparent window behavior, drag-to-move behavior, chat UI, AI provider/backend, voice input/output, conversation persistence, file manager, screen capture/vision, action confirmation/permissions, settings UI, or contextual panels were found. Treat those as PRD requirements and roadmap items, not completed features.
 
-### Repository state observed
+### Repository and recent history
 
-- Modified: `flexiaura-app/src-tauri/Cargo.toml`.
-- Untracked: `flexiaura-app/src-tauri/src/models/memory_info.rs`.
-- The current app registers `get_system_info`, which uses `SystemInfo`; the untracked `MemoryInfo` model is not registered in the inspected command path. Confirm its intended use before integrating it.
-- Existing Rust build artifacts are present under `src-tauri/target`; these are generated output, not source progress.
-- Root `README.md` is only a project title. The app README is still the default Tauri + React template.
+- Latest Git commit: `6d8c966` - `memory fuction achived,working on CPU info`.
+- Previous commits include `58bbe2e` (`dependencies and progress files`), `b482909` (system info split into parts and built), and `a30a990` (Rust/React connection and system info retrieval).
+- The working tree currently has uncommitted changes in `PROJECT_HANDOFF.md` and `flexiaura-app/src/App.jsx`; preserve these edits when continuing work. The current App.jsx changes include automatic RAM/CPU polling and CPU display.
+- Relevant modules include frontend system-control services for system, memory, and CPU data; Rust commands, services, and serializable models for the same categories.
+- `README.md` at the repository root is only a project title. The app README remains the default Tauri + React template.
+- Rust build artifacts under `src-tauri/target` are generated output, not feature implementation.
 
 ## Architecture as implemented today
 
 ```text
 React UI (src/App.jsx)
-  └─ frontend service (src/features/system-control/services/systemService.js)
-       └─ Tauri invoke("get_system_info")
-            └─ Rust command (src-tauri/src/commands/system.rs)
-                 └─ Rust service/model (src-tauri/src/services/system_service.rs, models/system_info.rs)
+  +-- system, memory, CPU UI -> frontend services -> Tauri invoke -> Rust commands -> Rust services/models
+      (memory and CPU are fetched on startup and every two seconds)
 ```
 
-The PRD’s Node.js backend, WebSocket/event layer, and most feature folders do not exist in the current repository tree. Current dependencies show no AI, voice, or Node backend integration. Keep this distinction explicit when asking another model to work on the project.
+The PRD's Node.js backend, WebSocket/event layer, and most feature folders do not exist in the current repository tree. Current package dependencies show no AI, voice, or Node backend integration. Keep this distinction explicit when planning work.
 
 ## Suggested next steps
 
-1. Review and retain/adjust the current Cargo.toml and `MemoryInfo` work; avoid assuming the untracked model is complete or safe to discard.
-2. Agree on the immediate milestone. The PRD roadmap begins with desktop foundation and companion UI; the current code is at a starter/integration-demo stage.
-3. Build the companion window and cat interaction as the first visible product slice, then add chat UI and a provider-neutral AI service.
-4. Before adding desktop actions, define an allowlisted command interface, input validation, explicit confirmation for sensitive actions, and capability boundaries. Do not execute arbitrary AI-generated shell commands.
+1. Review the automatic CPU/RAM polling interval and CPU measurement approach; add loading/error feedback where useful.
+2. Replace the developer test page with the first product UI milestone: the companion window and cat interaction described in the PRD.
+3. Add a compact chat UI and provider-neutral AI service after deciding where the planned Node.js backend fits into the current Tauri architecture.
+4. Before adding desktop actions, define allowlisted tools, input validation, explicit confirmation for sensitive actions, and Tauri capability boundaries. Do not execute arbitrary AI-generated shell commands.
 5. Add voice, file access, and user-triggered screen analysis as separate modules with clear privacy indications and permissions.
-6. Update this handoff when implementation changes; keep “implemented”, “in progress”, and “planned” claims tied to observable code or recorded decisions.
-
+6. Refresh this snapshot after meaningful implementation changes, grounding status claims in current source or recorded decisions.
 ## Guidance for AI collaborators
 
 - Read this handoff first, then inspect the relevant source files before editing.

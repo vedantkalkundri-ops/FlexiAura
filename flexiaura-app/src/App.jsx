@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getSystemInfo } from "./features/system-control/services/systemService";
 import "./App.css";
@@ -54,6 +54,23 @@ function App() {
       setCpuError(String(error));
     }
   }
+
+  useEffect(() => {
+    // Fetch information immediately when the app opens
+    fetchMemoryInfo();
+    fetchCpuInfo();
+
+    // Automatically refresh every 2 seconds
+    const intervalId = setInterval(() => {
+      fetchMemoryInfo();
+      fetchCpuInfo();
+    }, 2000);
+
+    // Stop monitoring when the component is removed
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, []);
 
   return (
     <main className="container">
@@ -129,6 +146,28 @@ function App() {
         )}
 
         {memoryError && <p>Error: {memoryError}</p>}
+      </section>
+
+      
+      <hr />
+
+      <section>
+        <h2>CPU Monitoring</h2>
+
+        <button onClick={fetchCpuInfo}>
+          Check CPU Usage
+        </button>
+
+        {cpuInfo && (
+          <div>
+            <p>CPU Name: {cpuInfo.cpuName}</p>
+            <p>CPU Usage: {cpuInfo.cpuUsage.toFixed(2)}%</p>
+            <p>Logical Processors: {cpuInfo.coreCount}</p>
+            <p>Frequency: {(cpuInfo.frequency / 1000).toFixed(2)} GHz</p>
+          </div>
+        )}
+
+        {cpuError && <p>Error: {cpuError}</p>}
       </section>
 
       
