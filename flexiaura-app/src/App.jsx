@@ -6,6 +6,7 @@ import {
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getSystemInfo } from "./features/system-control/services/systemService";
+import { AssistantPanel } from "./features/ai-assistant";
 import "./App.css";
 import { getMemoryInfo } from "./features/system-control/services/memoryService";
 import { getCpuInfo } from "./features/system-control/services/cpuService";
@@ -165,6 +166,12 @@ function App() {
       <p>AI Desktop Assistant</p>
 
       {/* SYSTEM INFO */}
+
+      <section>
+        <AssistantPanel />
+      </section>
+
+      <hr />
 
       <section>
         <h2>Rust Connection Test</h2>
