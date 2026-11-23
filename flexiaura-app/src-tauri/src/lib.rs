@@ -2,6 +2,7 @@ mod commands {
     pub mod system;
     pub mod memory;
     pub mod cpu;
+    pub mod applications;
 }
 
 mod models {
@@ -14,6 +15,7 @@ mod services {
     pub mod system_service;
     pub mod memory_service;
     pub mod cpu_service;
+    pub mod application_service;
 }
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -31,7 +33,8 @@ pub fn run() {
             greet,
             commands::system::get_system_info,
             commands::memory::get_memory_info,
-            commands::cpu::get_cpu_info
+            commands::cpu::get_cpu_info,
+            commands::applications::launch_application
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

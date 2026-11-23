@@ -5,6 +5,7 @@ import { getSystemInfo } from "./features/system-control/services/systemService"
 import "./App.css";
 import { getMemoryInfo } from "./features/system-control/services/memoryService";
 import { getCpuInfo } from "./features/system-control/services/cpuService";
+import { launchApplication } from "./features/system-control/services/applicationService";
 
 function App() {
   //System info and Greet
@@ -72,10 +73,28 @@ function App() {
     };
   }, []);
 
+  //launch application
+  const [applicationStatus, setApplicationStatus] = useState("");
+  const [applicationError, setApplicationError] = useState("");
+
+  async function handleLaunchApplication(appId) {
+    try {
+      setApplicationError("");
+      setApplicationStatus("");
+
+      const result = await launchApplication(appId);
+      setApplicationStatus(result);
+    } catch (error) {
+      setApplicationError(String(error));
+    }
+  }
+
   return (
     <main className="container">
       <h1>FlexiAura</h1>
       <p>AI Desktop Assistant</p>
+
+      {/* SYSTEM INFO */}
 
       <section>
         <h2>Rust Connection Test</h2>
@@ -98,6 +117,8 @@ function App() {
 
       <hr />
 
+      {/* GREET*/}
+
       <section>
         <h2>Greet Test</h2>
 
@@ -117,6 +138,8 @@ function App() {
 
         <p>{greetMsg}</p>
       </section>
+
+      {/* RAM MONITORING */}
 
       <section>
         <h2>RAM Monitoring</h2>
@@ -151,6 +174,8 @@ function App() {
       
       <hr />
 
+      {/* CPU MONITORING */}
+      
       <section>
         <h2>CPU Monitoring</h2>
 
@@ -170,7 +195,32 @@ function App() {
         {cpuError && <p>Error: {cpuError}</p>}
       </section>
 
+      <hr />
+
+      {/* application control */}
+
+      <section>
+        <h2>Application Control</h2>
+
+        <button onClick={() => handleLaunchApplication("notepad")}>
+          Open Notepad
+        </button>
+
+        <button onClick={() => handleLaunchApplication("calculator")}>
+          Open Calculator
+        </button>
+
+        {applicationStatus && (
+          <p>{applicationStatus}</p>
+        )}
+
+        {applicationError && (
+          <p>Error: {applicationError}</p>
+        )}
+      </section>
+
       
+
     </main>
   );
 }
