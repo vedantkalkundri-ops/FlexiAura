@@ -1,4 +1,8 @@
-
+import {
+  selectFolder,
+  getDirectoryContents,
+  approveDirectory
+} from "./features/system-control/services/fileService.js";
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getSystemInfo } from "./features/system-control/services/systemService";
@@ -87,6 +91,72 @@ function App() {
     } catch (error) {
       setApplicationError(String(error));
     }
+  }
+
+  //fileServices
+  const [selectedFolder, setSelectedFolder] = useState("");
+  const [files, setFiles] = useState([]);
+  const [fileManagerError, setFileManagerError] = useState("");
+  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
+
+  async function handleSelectFolder() {
+    try {
+      setFileManagerError("");
+
+      const folderPath = await selectFolder();
+
+      // User cancelled the folder picker
+      if (!folderPath) {
+        return;
+      }
+
+      setIsLoadingFiles(true);
+
+      const approvedPath = await approveDirectory(folderPath);
+
+      const contents = await getDirectoryContents(approvedPath);
+
+      setSelectedFolder(folderPath);
+      setFiles(contents);
+    } catch (error) {
+      setFileManagerError(String(error));
+      setFiles([]);
+    } finally {
+      setIsLoadingFiles(false);
+    }
+  }
+
+  async function navigateToFolder(path) {
+    try {
+      setFileManagerError("");
+      setIsLoadingFiles(true);
+
+      const contents = await getDirectoryContents(path);
+
+      setSelectedFolder(path);
+      setFiles(contents);
+    } catch (error) {
+      setFileManagerError(String(error));
+    } finally {
+      setIsLoadingFiles(false);
+    }
+  }
+
+  async function navigateBack() {
+    if (!selectedFolder) return;
+
+    const parentPath = selectedFolder.replace(/[\\/]+$/, "");
+
+    const lastSeparator = Math.max(
+      parentPath.lastIndexOf("\\"),
+      parentPath.lastIndexOf("/")
+    );
+
+    if (lastSeparator < 0) return;
+
+    const parent = parentPath.substring(0, lastSeparator) || parentPath.substring(0, 1);
+
+    await navigateToFolder(parent);
   }
 
   return (
@@ -219,7 +289,72 @@ function App() {
         )}
       </section>
 
-      
+      <hr />
+
+      {/* File manager */}
+
+      <section>
+        <h2>File Manager</h2>
+
+        <button onClick={handleSelectFolder}>
+          Browse Folder
+        </button>
+
+        {selectedFolder && (
+          <div>
+            <button onClick={navigateBack}>
+              ← Back
+            </button>
+
+            <p>Current Location: {selectedFolder}</p>
+          </div>
+        )}
+
+        {selectedFolder && (
+          <div>
+            <h3>Selected Folder</h3>
+            <p>{selectedFolder}</p>
+          </div>
+        )}
+
+        {isLoadingFiles && <p>Loading files...</p>}
+
+        {files.length > 0 && (
+          <div>
+            <h3>Folder Contents</h3>
+
+            {files.map((file) => (
+              <div key={file.path}>
+                <p>
+                  {file.isDirectory ? "📁" : "📄"}{" "}
+
+                  {file.isDirectory ? (
+                    <button onClick={() => navigateToFolder(file.path)}>
+                      {file.name}
+                    </button>
+                  ) : (
+                    file.name
+                  )}
+                </p>
+
+                {!file.isDirectory && (
+                  <small>
+                    Size: {file.size} bytes
+                  </small>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {selectedFolder && files.length === 0 && !isLoadingFiles && (
+          <p>This folder is empty.</p>
+        )}
+
+        {fileManagerError && (
+          <p>Error: {fileManagerError}</p>
+        )}
+      </section>
 
     </main>
   );
